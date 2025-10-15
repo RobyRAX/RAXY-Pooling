@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using RAXY.Core;
 using RAXY.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -8,18 +7,8 @@ using UnityEngine.Pool;
 
 namespace RAXY.Pooling
 {
-    public class ObjectPoolManager : Singleton<ObjectPoolManager>, IGameplayObject
+    public class ObjectPoolManager : Singleton<ObjectPoolManager>
     {
-        #region IGameplayObject
-        public GameObject GetGameObject => this.gameObject;
-        public GameplayObjectType GameplayObjectType => GameplayObjectType.Manager;
-        public bool IsInitDone { get; set; }
-        public void Init(Action OnInitDone = null)
-        {
-            IsInitDone = true;
-        }
-        #endregion
-
         [ShowInInspector]
         [HideReferenceObjectPicker]
         public Dictionary<string, ObjectPoolInstance> ObjectPoolDict = new();
