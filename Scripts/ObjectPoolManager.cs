@@ -21,13 +21,12 @@ namespace RAXY.Pooling
                 return null;
             }
 
-            if (ObjectPoolDict.TryGetValue(original.name, out var existingPool))
-            {
-                return existingPool; // already exists, return it
-            }
+            var key = CustomUtility.GetObjectNameWithout_Clone(original.name);
+            if (ObjectPoolDict.TryGetValue(key, out var existingPool))
+                return existingPool;
 
             ObjectPoolInstance newPool = new ObjectPoolInstance(original);
-            ObjectPoolDict.Add(original.name, newPool);
+            ObjectPoolDict.Add(key, newPool);
 
             return newPool;
         }
@@ -42,7 +41,8 @@ namespace RAXY.Pooling
             if (originalName == null)
                 originalName = "";
 
-            ObjectPoolDict.TryGetValue(originalName, out var selectedPool);
+            ObjectPoolDict.TryGetValue(CustomUtility.GetObjectNameWithout_Clone(originalName), out var selectedPool);
+
             if (selectedPool == null)
             {
                 CustomDebug.LogWarning("Pool with the key '" + originalName + "' doesnt exist...");
@@ -68,7 +68,7 @@ namespace RAXY.Pooling
                                                 Transform parent = null,
                                                 bool applyDefaultTransform = false)
         {
-            ObjectPoolDict.TryGetValue(original.name, out var selectedPool);
+            ObjectPoolDict.TryGetValue(CustomUtility.GetObjectNameWithout_Clone(original.name), out var selectedPool);
             if (selectedPool == null)
             {
                 selectedPool = CreatePool(original);
@@ -92,8 +92,27 @@ namespace RAXY.Pooling
         [Button]
         public void ReleasePoolableObject(PoolableObject pooledObject)
         {
-            ObjectPoolInstance selectedPool = ObjectPoolDict[pooledObject.OriginalName];
-            selectedPool.Release(pooledObject);
+            if (pooledObject == null)
+            {
+                CustomDebug.LogWarning("[ObjectPool] Release called with null pooledObject");
+                return;
+            }
+
+            var key = CustomUtility.GetObjectNameWithout_Clone(pooledObject.OriginalName);
+            if (!ObjectPoolDict.TryGetValue(key, out var selectedPool))
+            {
+                CustomDebug.LogWarning($"[ObjectPool] No pool found for key '{key}'. Did you use the same prefab / name?");
+                return;
+            }
+
+            try
+            {
+                selectedPool.Release(pooledObject);
+            }
+            catch (Exception e)
+            {
+                CustomDebug.LogError($"[ObjectPool] Error releasing object: {e}");
+            }
         }
     }
 
@@ -136,19 +155,16 @@ namespace RAXY.Pooling
                         ReleaseAction,
                         DestroyAction,
                         true,
-                        original.defaultCapacity);
+                        original.defaultCapacity,
+                        original.maxSize);
 
             if (original.defaultCapacity > 0)
             {
-                var temp = new List<PoolableObject>(original.defaultCapacity);
                 for (int i = 0; i < original.defaultCapacity; i++)
                 {
-                    var obj = pool.Get();
-                    temp.Add(obj);
-                }
-                // Push them back into pool
-                foreach (var obj in temp)
+                    PoolableObject obj = CreateAction();
                     pool.Release(obj);
+                }
             }
         }
 
@@ -164,11 +180,14 @@ namespace RAXY.Pooling
         }
         void ReleaseAction(PoolableObject poolableObj)
         {
+            poolableObj.transform.SetParent(poolParent);
             poolableObj.gameObject.SetActive(false);
         }
         void DestroyAction(PoolableObject poolableObj)
         {
-            GameObject.Destroy(poolableObj);
+            if (poolableObj == null)
+                return;
+            GameObject.Destroy(poolableObj.gameObject);
         }
 
         public PoolableObject Get()
@@ -181,6 +200,7 @@ namespace RAXY.Pooling
             try
             {
                 poolable.transform.SetParent(poolParent);
+                poolable.ApplyDefaultTransform();
                 pool.Release(poolable);
             }
             catch (Exception e)

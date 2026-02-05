@@ -1,4 +1,5 @@
 using System;
+using RAXY.Utility;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -10,6 +11,7 @@ namespace RAXY.Pooling
     {
         public string OriginalName { get; private set; }
         public int defaultCapacity = 5;
+        public int maxSize = 5;
 
         [TitleGroup("Debug")]
         [SerializeField]
@@ -26,6 +28,7 @@ namespace RAXY.Pooling
         void Awake()
         {
             StoreTransformSetting();
+            OriginalName = CustomUtility.GetObjectNameWithout_Clone(gameObject.name);
         }
 
         [TitleGroup("Debug")]
@@ -42,16 +45,26 @@ namespace RAXY.Pooling
             transform.localScale = defaultScale;
         }
 
-        public void SetPool(ObjectPoolInstance pool)
+        public void SetPool(ObjectPoolInstance poolInstance)
         {
-            this.pool = pool;
-            OriginalName = pool.OriginalObject.name;
+            pool = poolInstance;
         }
 
-        public void Release()
+        public bool Release()
         {
+            if (pool == null)
+                return false;
+
             pool.Release(this);
+            return true;
         }
+
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            StoreTransformSetting();
+        }
+#endif
     }
 
     [Serializable]
