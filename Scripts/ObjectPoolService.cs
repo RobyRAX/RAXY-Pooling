@@ -7,11 +7,39 @@ using UnityEngine.Pool;
 
 namespace RAXY.Pooling
 {
-    public class ObjectPoolManager : Singleton<ObjectPoolManager>
+    public class ObjectPoolService : MonoBehaviour
     {
+        private static ObjectPoolService _instance;
+        public static ObjectPoolService Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindAnyObjectByType<ObjectPoolService>();
+
+                    if (_instance == null)
+                    {
+                        var go = new GameObject(nameof(ObjectPoolService));
+                        _instance = go.AddComponent<ObjectPoolService>();
+                        DontDestroyOnLoad(go);
+                    }
+                }
+                return _instance;
+            }
+        }
+
         [ShowInInspector]
         [HideReferenceObjectPicker]
         public Dictionary<string, ObjectPoolInstance> ObjectPoolDict = new();
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _instance = null;
+            }
+        }
 
         public ObjectPoolInstance CreatePool(PoolableObject original)
         {
@@ -139,7 +167,7 @@ namespace RAXY.Pooling
         public void Setup(PoolableObject original)
         {
             OriginalObject = original;
-            Transform managerTransform = ObjectPoolManager.Instance.transform;
+            Transform managerTransform = ObjectPoolService.Instance.transform;
 
             string poolParentName = $"{OriginalObject.name} - Pool";
             poolParent = managerTransform.Find(poolParentName);
