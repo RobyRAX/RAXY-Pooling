@@ -80,12 +80,15 @@ namespace RAXY.Pooling
 
             if (parent != null)
             {
+                pooledObject.transform.SetParent(parent);
                 if (applyDefaultTransform)
                 {
                     pooledObject.ApplyDefaultTransform();
                 }
-
-                pooledObject.transform.SetParent(parent);
+            }
+            else if (applyDefaultTransform)
+            {
+                pooledObject.ApplyDefaultTransform();
             }
 
             return pooledObject;
@@ -104,14 +107,17 @@ namespace RAXY.Pooling
 
             PoolableObject pooledObject = selectedPool.Get();
 
-            if (applyDefaultTransform)
-            {
-                pooledObject.ApplyDefaultTransform();
-            }
-
             if (parent != null)
             {
                 pooledObject.transform.SetParent(parent);
+                if (applyDefaultTransform)
+                {
+                    pooledObject.ApplyDefaultTransform();
+                }
+            }
+            else if (applyDefaultTransform)
+            {
+                pooledObject.ApplyDefaultTransform();
             }
 
             return pooledObject;
