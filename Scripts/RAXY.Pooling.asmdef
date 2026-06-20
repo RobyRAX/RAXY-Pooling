@@ -2,9 +2,9 @@
     "name": "RAXY.Pooling",
     "rootNamespace": "RAXY.Pooling",
     "references": [
-        "GUID:9e24947de15b9834991c9d8411ea37cf",
-        "GUID:1791bbf8084eb024c969f9c18278e210",
-        "GUID:736f23a4f42e49d429767945c0c5b49e"
+        "Unity.Addressables",
+        "RAXY.Core",
+        "RAXY.Utility"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
